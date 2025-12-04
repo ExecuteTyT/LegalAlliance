@@ -69,12 +69,11 @@ export const Pricing: React.FC<PricingProps> = ({ onOpenModal }) => {
                   <div className="w-12 h-12 bg-success rounded-xl flex items-center justify-center">
                     <TrendingDown className="text-white w-6 h-6" strokeWidth={2} />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm text-neutral-500 font-medium">Ежемесячный платеж</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-mono font-bold text-primary">от</span>
-                      <span className="text-3xl font-mono font-bold text-success">5 000</span>
-                      <span className="text-lg text-neutral-400">₽/мес</span>
+                      <span className="text-xl sm:text-2xl font-mono font-bold text-primary">от</span>
+                      <span className="text-2xl sm:text-3xl font-mono font-bold text-success whitespace-nowrap">5000 <span className="text-base sm:text-lg text-neutral-400 font-normal">₽/мес</span></span>
                     </div>
                   </div>
                 </div>
