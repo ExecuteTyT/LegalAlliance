@@ -33,7 +33,7 @@ const steps = [
   { 
     id: '05', 
     title: 'Списание долгов', 
-    duration: '4-6 месяцев', 
+    duration: '6-9 месяцев', 
     desc: 'Финансовый управляющий завершает процедуру. Суд выносит определение о полном списании долгов.',
     checklist: ['Отчет управляющего', 'Завершение реализации', 'Полное освобождение']
   }
@@ -47,7 +47,7 @@ export const Process: React.FC = () => {
           Как проходит процедура
         </h2>
         <p className="text-lg text-neutral-500">
-          Весь процесс занимает в среднем 6 месяцев. Мы работаем "под ключ".
+          Весь процесс занимает в среднем 9 месяцев. Мы работаем "под ключ".
         </p>
       </div>
 
@@ -103,7 +103,7 @@ export const Process: React.FC = () => {
       
       <div className="text-center mt-12 lg:mt-20">
          <p className="inline-block px-6 py-3 bg-neutral-100 rounded-full text-primary font-medium border border-neutral-200">
-           Итого: полное списание долгов за <span className="font-bold text-secondary-dark">6-8 месяцев</span>
+           Итого: полное списание долгов за <span className="font-bold text-secondary-dark">9 месяцев</span>
          </p>
       </div>
     </Section>

@@ -20,7 +20,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenModal }) => {
           <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
             Законно спишем долги <br />
             до <span className="text-gradient-gold font-mono">10 млн ₽</span> <br />
-            за <span className="text-gradient-gold font-mono">6 месяцев</span>
+            за <span className="text-gradient-gold font-mono">9 месяцев</span>
           </h1>
           
           <p className="text-lg lg:text-xl text-neutral-300 leading-relaxed max-w-xl">
@@ -45,8 +45,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenModal }) => {
           <div className="flex flex-col sm:flex-row gap-6 mt-4">
             {[
               "Без предоплаты",
-              "Гарантия в договоре",
-              "1250+ успешных дел"
+              "1250+ успешных дел",
+              "Работаем по договору"
             ].map((item, idx) => (
               <div key={idx} className="flex items-center gap-2 text-white/90">
                 <CheckCircle2 className="text-success w-5 h-5" />

@@ -18,10 +18,34 @@ export const Solution: React.FC = () => {
           <h2 className="text-3xl lg:text-5xl font-bold text-primary mb-6">
             Мы остановим преследования и законно спишем долги
           </h2>
-          <p className="text-xl text-neutral-700 mb-10 leading-relaxed">
-            За 6 месяцев проведём вас через процедуру банкротства "под ключ". 
+          <p className="text-xl text-neutral-700 mb-6 leading-relaxed">
+            За 9 месяцев проведём вас через процедуру банкротства "под ключ". 
             Вы получите официальное решение суда и начнёте жизнь с чистого листа.
           </p>
+          
+          {/* Информационный блок о банкротстве с ипотекой */}
+          <div className="bg-gradient-to-br from-secondary/10 to-secondary-light/5 rounded-2xl p-6 mb-10 border border-secondary/20">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-gold rounded-xl flex items-center justify-center shrink-0">
+                <ShieldCheck className="text-primary w-6 h-6" strokeWidth={2} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-primary mb-2">
+                  Банкротство с ипотекой стало доступно
+                </h3>
+                <p className="text-neutral-700 leading-relaxed mb-2">
+                  Действует закон о списании долгов, даже если есть действующая ипотека. 
+                  Ипотечное жилье при банкротстве сохраняется, при условии, что данная квартира является единственным жильем и нет просрочек по ипотеке.
+                </p>
+                <p className="text-sm font-semibold text-secondary">
+                  Уже завершено более 100 дел с сохранением ипотечного жилья
+                </p>
+                <p className="text-xs text-neutral-500 mt-3 pt-3 border-t border-secondary/20">
+                  Процедура проводится в рамках <strong>ФЗ №127 «О несостоятельности (банкротстве)»</strong>
+                </p>
+              </div>
+            </div>
+          </div>
 
           <div className="space-y-8">
             {[

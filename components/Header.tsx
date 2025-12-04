@@ -22,7 +22,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
     { label: 'Услуги', href: '#services' },
     { label: 'Процесс', href: '#process' },
     { label: 'Кейсы', href: '#cases' },
-    { label: 'Тарифы', href: '#pricing' },
+    { label: 'Стоимость', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
   ];
 
