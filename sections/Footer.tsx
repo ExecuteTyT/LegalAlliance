@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '../components/ui/Button';
-import { Scale, Phone, Mail, MapPin } from 'lucide-react';
+import { Scale, Phone, Mail, MapPin, MessageCircle, Send } from 'lucide-react';
 
 interface FooterProps {
   onOpenModal: () => void;
@@ -35,12 +35,24 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               Команда экспертов с 8-летним опытом. Помогаем гражданам законно списать долги и начать новую финансовую жизнь.
             </p>
             <div className="flex gap-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-secondary hover:text-primary transition-all cursor-pointer">
-                  {/* Social Icon Placeholder */}
-                  <span className="font-bold text-xs">SOC</span>
-                </div>
-              ))}
+              <a 
+                href="https://wa.me/74951234567" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25D366] hover:text-white transition-all cursor-pointer group"
+                aria-label="WhatsApp"
+              >
+                <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </a>
+              <a 
+                href="https://t.me/alliance_pravo" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#0088cc] hover:text-white transition-all cursor-pointer group"
+                aria-label="Telegram"
+              >
+                <Send className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </a>
             </div>
           </div>
 
@@ -80,7 +92,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               </li>
               <li className="flex gap-3">
                 <Mail className="text-secondary shrink-0" size={20} />
-                <a href="mailto:info@liberte.ru" className="hover:text-white transition-colors">info@pravo-alliance.ru</a>
+                <a href="mailto:info@alliance-pravo.ru" className="hover:text-white transition-colors">info@alliance-pravo.ru</a>
               </li>
             </ul>
           </div>

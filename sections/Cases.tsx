@@ -10,7 +10,7 @@ const cases: CaseStudy[] = [
     name: "Мария С.",
     profession: "Предприниматель",
     location: "Москва",
-    image: "https://picsum.photos/id/1/200/200",
+    image: "",
     debt: 4200000,
     term: 7,
     result: "Долг списан полностью",
@@ -21,7 +21,7 @@ const cases: CaseStudy[] = [
     name: "Дмитрий К.",
     profession: "IT-специалист",
     location: "Санкт-Петербург",
-    image: "https://picsum.photos/id/2/200/200",
+    image: "",
     debt: 8700000,
     term: 6,
     result: "Сохранил автомобиль",
@@ -32,7 +32,7 @@ const cases: CaseStudy[] = [
     name: "Елена В.",
     profession: "Врач",
     location: "Казань",
-    image: "https://picsum.photos/id/3/200/200",
+    image: "",
     debt: 1800000,
     term: 5,
     result: "Списаны микрозаймы",
@@ -58,16 +58,9 @@ export const Cases: React.FC = () => {
             <div className="h-2 w-full bg-gradient-gold scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
             
             <div className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <img 
-                  src={item.image} 
-                  alt={item.name} 
-                  className="w-16 h-16 rounded-full object-cover border-2 border-secondary"
-                />
-                <div>
-                  <h4 className="font-bold text-primary text-lg">{item.name}</h4>
-                  <p className="text-sm text-neutral-500">{item.profession}, {item.location}</p>
-                </div>
+              <div className="mb-6 pb-6 border-b border-neutral-200">
+                <h4 className="font-bold text-primary text-lg mb-1">{item.name}</h4>
+                <p className="text-sm text-neutral-500">{item.profession}, {item.location}</p>
               </div>
 
               <div className="bg-neutral-50 rounded-xl p-6 mb-6">
