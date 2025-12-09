@@ -11,6 +11,8 @@ export interface ProblemItem {
   title: string;
   description: string;
   Icon: LucideIcon;
+  image: string;
+  story?: string;
 }
 
 export interface CaseStudy {
@@ -23,6 +25,8 @@ export interface CaseStudy {
   term: number;
   quote: string;
   result: string;
+  rating: number;
+  date: string;
 }
 
 export interface PricingPlan {

@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { ShieldCheck, Lock } from 'lucide-react';
+import { DebtCalculator } from '../components/DebtCalculator';
 
-export const Solution: React.FC = () => {
+interface SolutionProps {
+  onOpenModal: () => void;
+}
+
+export const Solution: React.FC<SolutionProps> = ({ onOpenModal }) => {
   const [formState, setFormState] = useState({ name: '', phone: '', amount: '500k-1m' });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -11,17 +16,65 @@ export const Solution: React.FC = () => {
   };
 
   return (
-    <Section className="bg-white">
-      <div className="grid lg:grid-cols-5 gap-12 items-start">
+    <Section className="bg-gradient-to-br from-neutral-50 via-white to-secondary/5">
+      <div className="grid lg:grid-cols-5 gap-12 items-center">
         {/* Left Content */}
         <div className="lg:col-span-3">
           <h2 className="text-3xl lg:text-5xl font-bold text-primary mb-6">
-            Мы остановим преследования и законно спишем долги
+            Мы остановим преследования. Вы не одни.
           </h2>
           <p className="text-xl text-neutral-700 mb-6 leading-relaxed">
             За 9 месяцев проведём вас через процедуру банкротства "под ключ". 
             Вы получите официальное решение суда и начнёте жизнь с чистого листа.
           </p>
+          
+          {/* Visual Before/After */}
+          <div className="bg-white rounded-2xl p-6 mb-8 border-2 border-secondary/20 shadow-lg">
+            <div className="grid grid-cols-2 gap-4 lg:gap-6">
+              <div className="text-center lg:text-center">
+                <div className="text-2xl lg:text-3xl font-bold text-error mb-2">ДО</div>
+                <div className="space-y-2 text-sm text-neutral-600 text-left lg:text-center">
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-error shrink-0">✗</span>
+                    <span>Постоянный стресс</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-error shrink-0">✗</span>
+                    <span>Звонки коллекторов</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-error shrink-0">✗</span>
+                    <span>Растущий долг</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-error shrink-0">✗</span>
+                    <span>Страх за будущее</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center lg:text-center border-l border-neutral-200 pl-4 lg:pl-6">
+                <div className="text-2xl lg:text-3xl font-bold text-success mb-2">ПОСЛЕ</div>
+                <div className="space-y-2 text-sm text-neutral-600 text-left lg:text-center">
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-success shrink-0">✓</span>
+                    <span>Спокойный сон</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-success shrink-0">✓</span>
+                    <span>Долги списаны</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-success shrink-0">✓</span>
+                    <span>Имущество сохранено</span>
+                  </div>
+                  <div className="flex items-center gap-2 justify-start lg:justify-center">
+                    <span className="text-success shrink-0">✓</span>
+                    <span>Новая жизнь</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           
           {/* Информационный блок о банкротстве с ипотекой */}
           <div className="bg-gradient-to-br from-secondary/10 to-secondary-light/5 rounded-2xl p-6 mb-10 border border-secondary/20">
@@ -67,8 +120,24 @@ export const Solution: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Form */}
-        <div className="lg:col-span-2">
+        {/* Right Content - Image and Form */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Large Image */}
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+            <img 
+              src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=600&fit=crop&q=80"
+              alt="Спокойная жизнь после решения проблем"
+              loading="lazy"
+              className="w-full h-64 lg:h-80 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex items-end p-6">
+              <p className="text-white font-semibold text-lg">
+                "Теперь я могу дышать свободно"
+              </p>
+            </div>
+          </div>
+          
+          {/* Form */}
           <div className="bg-white rounded-3xl p-8 lg:p-10 shadow-2xl border border-neutral-100 relative overflow-hidden">
             {/* Decorative top border */}
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-gold"></div>
@@ -78,27 +147,34 @@ export const Solution: React.FC = () => {
               <p className="text-neutral-500">Узнайте за 2 минуты, подходит ли вам банкротство</p>
             </div>
 
+            {/* Social Proof */}
+            <div className="bg-success/10 rounded-xl p-3 mb-4 border border-success/20">
+              <p className="text-xs text-neutral-700 text-center">
+                <strong className="text-success">✓ Сегодня уже 23 человека</strong> получили бесплатную консультацию
+              </p>
+            </div>
+
             <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Ваше имя</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">Как к вам обращаться?</label>
                 <input 
                   type="text" 
                   name="name"
                   value={formState.name}
                   onChange={handleInputChange}
-                  placeholder="Иван Иванов"
+                  placeholder="Ваше имя"
                   className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Телефон</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">Телефон для связи</label>
                 <input 
                   type="tel" 
                   name="phone"
                   value={formState.phone}
                   onChange={handleInputChange}
-                  placeholder="+7 (___) ___-__-__"
+                  placeholder="Ваш телефон"
                   className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
                 />
               </div>
@@ -123,7 +199,7 @@ export const Solution: React.FC = () => {
                 </div>
               </div>
 
-              <Button fullWidth size="lg" className="mt-2">
+              <Button fullWidth size="lg" className="mt-2 text-lg py-6 shadow-2xl hover:shadow-3xl">
                 Узнать результат
               </Button>
 
@@ -134,6 +210,11 @@ export const Solution: React.FC = () => {
             </form>
           </div>
         </div>
+      </div>
+
+      {/* Debt Calculator Section */}
+      <div className="mt-20">
+        <DebtCalculator onOpenModal={onOpenModal} />
       </div>
     </Section>
   );

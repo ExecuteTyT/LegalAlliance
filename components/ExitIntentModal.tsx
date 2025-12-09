@@ -27,22 +27,34 @@ export const ExitIntentModal: React.FC = () => {
         </div>
         
         <h2 className="text-2xl font-bold text-primary mb-3">Подождите!</h2>
-        <p className="text-neutral-600 mb-8 leading-relaxed">
-          Не уходите с долгами. Получите бесплатную экспресс-оценку вашей ситуации прямо сейчас.
+        <p className="text-neutral-600 mb-4 leading-relaxed">
+          Не уходите с долгами. Получите <strong className="text-primary">бесплатную</strong> экспресс-оценку вашей ситуации прямо сейчас.
         </p>
+        <p className="text-sm text-neutral-500 mb-6">
+          Тысячи людей уже начали новую жизнь. Вы тоже можете.
+        </p>
+
+        {/* Social Proof */}
+        <div className="bg-success/10 rounded-xl p-3 mb-6 border border-success/20">
+          <p className="text-xs text-neutral-700">
+            <strong className="text-success">✓ Сегодня уже 23 человека</strong> получили помощь
+          </p>
+        </div>
 
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setIsOpen(false); }}>
           <input 
             type="text" 
-            placeholder="Ваше имя" 
-            className="w-full h-12 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all"
+            placeholder="Как к вам обращаться?" 
+            className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
           />
           <input 
             type="tel" 
-            placeholder="Телефон" 
-            className="w-full h-12 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all"
+            placeholder="Ваш телефон для связи" 
+            className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
           />
-          <Button fullWidth size="lg">Получить консультацию</Button>
+          <Button fullWidth size="lg" className="text-lg py-6 shadow-2xl hover:shadow-3xl">
+            Получить БЕСПЛАТНУЮ консультацию
+          </Button>
         </form>
 
         <div className="flex items-center justify-center gap-2 text-xs text-neutral-400 mt-6">

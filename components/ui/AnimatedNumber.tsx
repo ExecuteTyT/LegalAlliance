@@ -16,12 +16,18 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1 });
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
 
   useEffect(() => {
-    if (isVisible && !hasAnimated) {
-      setHasAnimated(true);
+    // Reset and restart animation when value changes
+    setDisplayValue(0);
+    setAnimationKey(prev => prev + 1);
+  }, [value]);
+
+  useEffect(() => {
+    if (isVisible) {
       let startTime: number | null = null;
+      let animationFrameId: number;
       
       const animate = (timestamp: number) => {
         if (!startTime) startTime = timestamp;
@@ -33,15 +39,21 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
         setDisplayValue(Math.floor(easeProgress * value));
 
         if (progress < 1) {
-          requestAnimationFrame(animate);
+          animationFrameId = requestAnimationFrame(animate);
         } else {
           setDisplayValue(value);
         }
       };
       
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
+      
+      return () => {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
+      };
     }
-  }, [isVisible, value, duration, hasAnimated]);
+  }, [isVisible, value, duration, animationKey]);
 
   return (
     <span ref={ref} className={className}>

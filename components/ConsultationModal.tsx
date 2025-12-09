@@ -24,24 +24,33 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({ isOpen, on
       {!isSubmitted ? (
         <div className="text-center">
           <h2 className="text-2xl font-bold text-primary mb-3">Заявка на консультацию</h2>
-          <p className="text-neutral-600 mb-8 leading-relaxed">
-            Оставьте свои контакты. Юрист перезвонит вам в течение 15 минут и ответит на все вопросы.
+          <p className="text-neutral-600 mb-6 leading-relaxed">
+            Оставьте свои контакты. Юрист перезвонит вам в течение <strong className="text-primary">15 минут</strong> и ответит на все вопросы.
           </p>
+
+          {/* Social Proof */}
+          <div className="bg-success/10 rounded-xl p-4 mb-6 border border-success/20">
+            <p className="text-sm text-neutral-700">
+              <strong className="text-success">✓ Сегодня уже 23 человека</strong> получили бесплатную консультацию
+            </p>
+          </div>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <input 
               type="text" 
               required
-              placeholder="Ваше имя" 
-              className="w-full h-12 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all"
+              placeholder="Как к вам обращаться?" 
+              className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
             />
             <input 
               type="tel" 
               required
-              placeholder="+7 (___) ___-__-__" 
-              className="w-full h-12 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all"
+              placeholder="Ваш телефон для связи" 
+              className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
             />
-            <Button fullWidth size="lg">Жду звонка</Button>
+            <Button fullWidth size="lg" className="text-lg py-6 shadow-2xl hover:shadow-3xl">
+              Получить консультацию БЕСПЛАТНО
+            </Button>
           </form>
 
           <div className="flex items-center justify-center gap-2 text-xs text-neutral-400 mt-6">

@@ -3,14 +3,18 @@ import { Header } from './components/Header';
 import { Hero } from './sections/Hero';
 import { Problems } from './sections/Problems';
 import { Solution } from './sections/Solution';
+import { HowWeHelp } from './sections/HowWeHelp';
 import { Process } from './sections/Process';
 import { Advantages } from './sections/Advantages';
 import { Cases } from './sections/Cases';
+import { Team } from './sections/Team';
+import { Trust } from './sections/Trust';
 import { Pricing } from './sections/Pricing';
 import { FAQ } from './sections/FAQ';
 import { Footer } from './sections/Footer';
 import { ExitIntentModal } from './components/ExitIntentModal';
 import { ConsultationModal } from './components/ConsultationModal';
+import { ScrollProgress } from './components/ScrollProgress';
 import { Phone } from 'lucide-react';
 
 function App() {
@@ -21,14 +25,18 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
+      <ScrollProgress />
       <Header onOpenModal={openModal} />
       <main className="flex-grow">
         <Hero onOpenModal={openModal} />
         <Problems />
-        <Solution />
+        <Solution onOpenModal={openModal} />
+        <HowWeHelp />
         <Process />
         <Cases />
         <Advantages />
+        <Team />
+        <Trust />
         <Pricing onOpenModal={openModal} />
         <FAQ />
       </main>

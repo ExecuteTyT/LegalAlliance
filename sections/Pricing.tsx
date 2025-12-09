@@ -12,10 +12,10 @@ export const Pricing: React.FC<PricingProps> = ({ onOpenModal }) => {
     <Section id="pricing" className="bg-neutral-50">
       <div className="text-center mb-16">
         <h2 className="text-3xl lg:text-5xl font-bold text-primary mb-4">
-          Стоимость услуги
+          Стоимость, которая доступна каждому
         </h2>
         <p className="text-lg text-neutral-500">
-          Прозрачная фиксированная стоимость. Удобная рассрочка без переплат.
+          Мы понимаем вашу финансовую ситуацию. Поэтому предлагаем удобную рассрочку без переплат.
         </p>
       </div>
 
@@ -89,12 +89,12 @@ export const Pricing: React.FC<PricingProps> = ({ onOpenModal }) => {
                 size="lg" 
                 variant="primary"
                 onClick={onOpenModal}
-                className="w-full md:w-auto px-12"
+                className="w-full md:w-auto text-lg px-8 sm:px-10 md:px-12 py-8 sm:py-6 md:py-6 shadow-2xl hover:shadow-3xl"
               >
-                Получить консультацию
+                Получить БЕСПЛАТНУЮ консультацию
               </Button>
-              <p className="text-xs text-neutral-400 mt-4">
-                Первая консультация бесплатна
+              <p className="text-sm text-neutral-500 mt-4 font-medium">
+                ✓ Первая консультация бесплатна • ✓ Ответ за 15 минут
               </p>
             </div>
           </div>
