@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Light background circle -->
+  <circle cx="32" cy="32" r="31" fill="#FFFFFF"/>
+  <!-- Scale stand/base - dark color -->
+  <path d="M 32 24 L 32 48" stroke="#0A2540" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <!-- Horizontal beam -->
+  <path d="M 18 24 L 46 24" stroke="#0A2540" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <!-- Left plate -->
+  <ellipse cx="18" cy="24" rx="9" ry="2.5" fill="#0A2540"/>
+  <path d="M 18 24 L 18 21.5" stroke="#0A2540" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Right plate -->
+  <ellipse cx="46" cy="24" rx="9" ry="2.5" fill="#0A2540"/>
+  <path d="M 46 24 L 46 21.5" stroke="#0A2540" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
+

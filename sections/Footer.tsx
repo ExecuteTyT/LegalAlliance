@@ -88,7 +88,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
             <ul className="space-y-4 text-neutral-400">
               <li className="flex gap-3">
                 <MapPin className="text-secondary shrink-0" size={20} />
-                <span>г. Москва, ул. Примерная, д. 123, офис 404</span>
+                <span>Республика Татарстан, г. Набережные Челны, пр-кт Хасана Туфана, дом 12, офис 1506</span>
               </li>
               <li className="flex gap-3">
                 <Phone className="text-secondary shrink-0" size={20} />
