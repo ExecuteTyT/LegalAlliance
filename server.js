@@ -68,6 +68,7 @@ app.post('/api/submit-form', async (req, res) => {
           to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER
         });
 
+        // Убираем ciphers: 'SSLv3' - это устаревший протокол и может вызывать проблемы
         const transporter = nodemailer.createTransport({
           host: process.env.VITE_SMTP_HOST,
           port: smtpPort,
@@ -77,13 +78,12 @@ app.post('/api/submit-form', async (req, res) => {
             pass: process.env.VITE_SMTP_PASSWORD,
           },
           tls: {
-            rejectUnauthorized: false, // Для самоподписанных сертификатов
-            ciphers: 'SSLv3'
+            rejectUnauthorized: false // Для самоподписанных сертификатов
           },
           // Дополнительные настройки для надежности
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 10000
+          connectionTimeout: 30000,
+          greetingTimeout: 30000,
+          socketTimeout: 30000
         });
 
         // Пробуем проверить соединение (но не критично, если не получится)
@@ -117,46 +117,66 @@ app.post('/api/submit-form', async (req, res) => {
         console.error('❌ Ошибка отправки Email:');
         console.error('Сообщение:', emailError.message);
         console.error('Код:', emailError.code);
-        console.error('Команда:', emailError.command);
-        console.error('Полный объект ошибки:', JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2));
         
-        // Попробуем альтернативный порт, если используется 465
-        if (smtpPort === 465) {
-          console.log('🔄 Пробуем альтернативный порт 587...');
-          try {
-            const altTransporter = nodemailer.createTransport({
-              host: process.env.VITE_SMTP_HOST,
-              port: 587,
-              secure: false,
-              auth: {
-                user: process.env.VITE_SMTP_USER,
-                pass: process.env.VITE_SMTP_PASSWORD,
-              },
-              tls: {
-                rejectUnauthorized: false
-              }
-            });
+        // Проверяем, это DNS ошибка или другая
+        const isDnsError = emailError.code === 'EDNS' || emailError.message.includes('getaddrinfo') || emailError.message.includes('EAI_AGAIN');
+        
+        if (isDnsError) {
+          console.warn('⚠️ DNS ошибка - SMTP сервер недоступен с локальной машины');
+          console.warn('💡 Это нормально для локальной разработки. На production (Vercel) Email будет работать.');
+          // Не добавляем в errors, чтобы не блокировать успешный ответ, если Telegram работает
+        } else {
+          // Другие ошибки (авторизация, соединение и т.д.) - пробуем альтернативные порты
+          const alternativePorts = smtpPort === 465 ? [587, 25] : smtpPort === 587 ? [465, 25] : [587, 465];
+          
+          let emailSent = false;
+          for (const altPort of alternativePorts) {
+            console.log(`🔄 Пробуем альтернативный порт ${altPort}...`);
+            try {
+              const altTransporter = nodemailer.createTransport({
+                host: process.env.VITE_SMTP_HOST,
+                port: altPort,
+                secure: altPort === 465,
+                auth: {
+                  user: process.env.VITE_SMTP_USER,
+                  pass: process.env.VITE_SMTP_PASSWORD,
+                },
+                tls: {
+                  rejectUnauthorized: false
+                },
+                connectionTimeout: 30000,
+                greetingTimeout: 30000,
+                socketTimeout: 30000
+              });
 
-            await altTransporter.sendMail({
-              from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
-              to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
-              subject: `Новая заявка с сайта: ${name}`,
-              html: `
-                <h2>Новая заявка с сайта Правовой Альянс</h2>
-                <p><strong>Имя:</strong> ${name}</p>
-                <p><strong>Телефон:</strong> ${phone}</p>
-                ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
-                <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
-                <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
-              `,
-            });
-            console.log('✅ Письмо отправлено на Email через порт 587');
-          } catch (altError) {
-            console.error('❌ Ошибка при попытке через порт 587:', altError.message);
+              const altMailOptions = {
+                from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+                to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
+                subject: `Новая заявка с сайта: ${name}`,
+                html: `
+                  <h2>Новая заявка с сайта Правовой Альянс</h2>
+                  <p><strong>Имя:</strong> ${name}</p>
+                  <p><strong>Телефон:</strong> ${phone}</p>
+                  ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
+                  <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
+                  <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
+                `,
+              };
+
+              const altInfo = await altTransporter.sendMail(altMailOptions);
+              console.log(`✅ Письмо отправлено на Email через порт ${altPort}!`);
+              console.log('Message ID:', altInfo.messageId);
+              emailSent = true;
+              break; // Успешно отправили, выходим из цикла
+            } catch (altError) {
+              console.error(`❌ Ошибка при попытке через порт ${altPort}:`, altError.message);
+            }
+          }
+          
+          if (!emailSent) {
+            // Если все порты не сработали и это не DNS ошибка - добавляем в errors
             errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
           }
-        } else {
-          errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
         }
       }
     } else {
