@@ -59,6 +59,15 @@ app.post('/api/submit-form', async (req, res) => {
         const smtpPort = parseInt(process.env.VITE_SMTP_PORT || '465');
         const isSecure = smtpPort === 465;
 
+        console.log('📧 Настройки SMTP:', {
+          host: process.env.VITE_SMTP_HOST,
+          port: smtpPort,
+          secure: isSecure,
+          user: process.env.VITE_SMTP_USER,
+          from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+          to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER
+        });
+
         const transporter = nodemailer.createTransport({
           host: process.env.VITE_SMTP_HOST,
           port: smtpPort,
@@ -68,14 +77,25 @@ app.post('/api/submit-form', async (req, res) => {
             pass: process.env.VITE_SMTP_PASSWORD,
           },
           tls: {
-            rejectUnauthorized: false // Для самоподписанных сертификатов
-          }
+            rejectUnauthorized: false, // Для самоподписанных сертификатов
+            ciphers: 'SSLv3'
+          },
+          // Дополнительные настройки для надежности
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000
         });
 
-        // Проверка соединения
-        await transporter.verify();
+        // Пробуем проверить соединение (но не критично, если не получится)
+        try {
+          await transporter.verify();
+          console.log('✅ SMTP соединение проверено');
+        } catch (verifyError) {
+          console.warn('⚠️ Не удалось проверить SMTP соединение:', verifyError.message);
+          console.warn('Продолжаем отправку без проверки...');
+        }
 
-        await transporter.sendMail({
+        const mailOptions = {
           from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
           to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
           subject: `Новая заявка с сайта: ${name}`,
@@ -87,16 +107,65 @@ app.post('/api/submit-form', async (req, res) => {
             <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
             <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
           `,
-        });
+        };
 
+        const info = await transporter.sendMail(mailOptions);
         console.log('✅ Письмо отправлено на Email');
+        console.log('Message ID:', info.messageId);
+        console.log('Response:', info.response);
       } catch (emailError) {
-        console.error('❌ Ошибка отправки Email:', emailError.message);
-        console.error('Детали ошибки:', emailError);
-        errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
+        console.error('❌ Ошибка отправки Email:');
+        console.error('Сообщение:', emailError.message);
+        console.error('Код:', emailError.code);
+        console.error('Команда:', emailError.command);
+        console.error('Полный объект ошибки:', JSON.stringify(emailError, Object.getOwnPropertyNames(emailError), 2));
+        
+        // Попробуем альтернативный порт, если используется 465
+        if (smtpPort === 465) {
+          console.log('🔄 Пробуем альтернативный порт 587...');
+          try {
+            const altTransporter = nodemailer.createTransport({
+              host: process.env.VITE_SMTP_HOST,
+              port: 587,
+              secure: false,
+              auth: {
+                user: process.env.VITE_SMTP_USER,
+                pass: process.env.VITE_SMTP_PASSWORD,
+              },
+              tls: {
+                rejectUnauthorized: false
+              }
+            });
+
+            await altTransporter.sendMail({
+              from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+              to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
+              subject: `Новая заявка с сайта: ${name}`,
+              html: `
+                <h2>Новая заявка с сайта Правовой Альянс</h2>
+                <p><strong>Имя:</strong> ${name}</p>
+                <p><strong>Телефон:</strong> ${phone}</p>
+                ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
+                <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
+                <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
+              `,
+            });
+            console.log('✅ Письмо отправлено на Email через порт 587');
+          } catch (altError) {
+            console.error('❌ Ошибка при попытке через порт 587:', altError.message);
+            errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
+          }
+        } else {
+          errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
+        }
       }
     } else {
       console.warn('⚠️ SMTP не настроен (отсутствуют настройки)');
+      console.warn('Проверьте переменные:', {
+        host: !!process.env.VITE_SMTP_HOST,
+        user: !!process.env.VITE_SMTP_USER,
+        password: !!process.env.VITE_SMTP_PASSWORD
+      });
     }
 
     if (errors.length > 0) {
