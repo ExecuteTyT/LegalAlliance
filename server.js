@@ -8,12 +8,20 @@ import nodemailer from 'nodemailer';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Раздача статических файлов из dist (для production)
+app.use(express.static(join(__dirname, 'dist')));
 
 app.post('/api/submit-form', async (req, res) => {
   try {
@@ -230,10 +238,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Все остальные запросы отправляем на index.html (для SPA routing)
+app.get('*', (req, res) => {
+  // Если это API запрос, возвращаем 404
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
   console.log(`📧 SMTP: ${process.env.VITE_SMTP_HOST ? '✅ Настроен' : '❌ Не настроен'}`);
   console.log(`📱 Telegram: ${process.env.VITE_TELEGRAM_BOT_TOKEN ? '✅ Настроен' : '❌ Не настроен'}`);
+  console.log(`🌐 Режим: ${process.env.NODE_ENV || 'development'}`);
 });
 
