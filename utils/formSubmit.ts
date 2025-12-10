@@ -15,7 +15,17 @@ interface SubmitResult {
  * Отправляет данные формы в Telegram бота и на email
  */
 export async function submitForm(data: FormData): Promise<SubmitResult> {
-  const apiUrl = import.meta.env.VITE_API_URL || '/api/submit-form';
+  // Используем относительный путь для прокси Vite в dev режиме
+  // В production это будет работать через serverless функцию на Vercel
+  // Если VITE_API_URL не установлен или пустой, используем прокси
+  const envApiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = envApiUrl && envApiUrl.trim() !== '' 
+    ? envApiUrl.endsWith('/submit-form') 
+      ? envApiUrl 
+      : `${envApiUrl}/submit-form`
+    : '/api/submit-form';
+  
+  console.log('Отправка формы на:', apiUrl);
   
   try {
     const response = await fetch(apiUrl, {
