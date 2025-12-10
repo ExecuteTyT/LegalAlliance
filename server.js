@@ -65,9 +65,11 @@ app.post('/api/submit-form', async (req, res) => {
     let emailPromise = Promise.resolve();
     if (process.env.VITE_SMTP_HOST && process.env.VITE_SMTP_USER && process.env.VITE_SMTP_PASSWORD) {
       emailPromise = (async () => {
+        // Объявляем переменные до try блока, чтобы они были доступны в catch
+        const smtpPort = parseInt(process.env.VITE_SMTP_PORT || '465');
+        const isSecure = smtpPort === 465;
+        
         try {
-          const smtpPort = parseInt(process.env.VITE_SMTP_PORT || '465');
-          const isSecure = smtpPort === 465;
 
           console.log('📧 Настройки SMTP:', {
             host: process.env.VITE_SMTP_HOST,
