@@ -10,9 +10,42 @@ interface SolutionProps {
 
 export const Solution: React.FC<SolutionProps> = ({ onOpenModal }) => {
   const [formState, setFormState] = useState({ name: '', phone: '', amount: '500k-1m' });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormState({ ...formState, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const { submitForm } = await import('../utils/formSubmit');
+      const result = await submitForm({
+        name: formState.name,
+        phone: formState.phone,
+        source: 'Форма быстрой проверки (Solution)',
+        debtAmount: formState.amount
+      });
+
+      if (result.success) {
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormState({ name: '', phone: '', amount: '500k-1m' });
+        }, 3000);
+      } else {
+        setError(result.message || 'Произошла ошибка при отправке');
+      }
+    } catch (err) {
+      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -154,60 +187,95 @@ export const Solution: React.FC<SolutionProps> = ({ onOpenModal }) => {
               </p>
             </div>
 
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Как к вам обращаться?</label>
-                <input 
-                  type="text" 
-                  name="name"
-                  value={formState.name}
-                  onChange={handleInputChange}
-                  placeholder="Ваше имя"
-                  className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Телефон для связи</label>
-                <input 
-                  type="tel" 
-                  name="phone"
-                  value={formState.phone}
-                  onChange={handleInputChange}
-                  placeholder="Ваш телефон"
-                  className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-neutral-700 mb-2">Сумма долга</label>
-                <div className="relative">
-                  <select 
-                    name="amount"
-                    value={formState.amount}
+            {!isSubmitted ? (
+              <form className="space-y-5" onSubmit={handleSubmit}>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Как к вам обращаться?</label>
+                  <input 
+                    type="text" 
+                    name="name"
+                    required
+                    value={formState.name}
                     onChange={handleInputChange}
-                    className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all appearance-none"
-                  >
-                    <option value="under-500k">До 500 тыс. ₽</option>
-                    <option value="500k-1m">500 тыс. – 1 млн ₽</option>
-                    <option value="1m-3m">1 – 3 млн ₽</option>
-                    <option value="over-3m">Более 3 млн ₽</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
-                    ▼
+                    placeholder="Ваше имя"
+                    className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Телефон для связи</label>
+                  <input 
+                    type="tel" 
+                    name="phone"
+                    required
+                    value={formState.phone}
+                    onChange={handleInputChange}
+                    placeholder="Ваш телефон"
+                    className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">Сумма долга</label>
+                  <div className="relative">
+                    <select 
+                      name="amount"
+                      value={formState.amount}
+                      onChange={handleInputChange}
+                      className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all appearance-none"
+                    >
+                      <option value="under-500k">До 500 тыс. ₽</option>
+                      <option value="500k-1m">500 тыс. – 1 млн ₽</option>
+                      <option value="1m-3m">1 – 3 млн ₽</option>
+                      <option value="over-3m">Более 3 млн ₽</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
+                      ▼
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <Button fullWidth size="lg" className="mt-2 text-lg py-6 shadow-2xl hover:shadow-3xl">
-                Узнать результат
-              </Button>
+                {error && (
+                  <div className="bg-error/10 border border-error/20 rounded-xl p-3">
+                    <p className="text-sm text-error text-center">{error}</p>
+                  </div>
+                )}
 
-              <div className="flex items-center justify-center gap-2 text-xs text-neutral-400 mt-4">
-                <Lock size={12} />
-                <span>Ваши данные под надежной защитой</span>
+                <Button 
+                  fullWidth 
+                  size="lg" 
+                  className="mt-2 text-lg py-6 shadow-2xl hover:shadow-3xl"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Отправка...' : 'Узнать результат'}
+                </Button>
+
+                <div className="flex items-center justify-center gap-2 text-xs text-neutral-400 mt-4">
+                  <Lock size={12} />
+                  <span>Ваши данные под надежной защитой</span>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6 text-success">
+                  <ShieldCheck size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-primary mb-3">Заявка принята!</h3>
+                <p className="text-neutral-600 mb-4">
+                  Спасибо! Наш специалист свяжется с вами в ближайшее время.
+                </p>
+                <Button 
+                  fullWidth 
+                  onClick={() => {
+                    setIsSubmitted(false);
+                    setFormState({ name: '', phone: '', amount: '500k-1m' });
+                  }}
+                  variant="secondary"
+                >
+                  Отправить еще одну заявку
+                </Button>
               </div>
-            </form>
+            )}
           </div>
         </div>
       </div>

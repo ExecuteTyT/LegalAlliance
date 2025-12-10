@@ -36,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
             </p>
             <div className="flex gap-4">
               <a 
-                href="https://wa.me/74951234567" 
+                href="https://wa.me/79061231544" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#25D366] transition-all cursor-pointer group"
@@ -92,7 +92,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenModal }) => {
               </li>
               <li className="flex gap-3">
                 <Phone className="text-secondary shrink-0" size={20} />
-                <a href="tel:+74951234567" className="hover:text-white transition-colors">+7 (495) 123-45-67</a>
+                <a href="tel:+79061231544" className="hover:text-white transition-colors">+7 (906) 123-15-44</a>
               </li>
               <li className="flex gap-3">
                 <Mail className="text-secondary shrink-0" size={20} />

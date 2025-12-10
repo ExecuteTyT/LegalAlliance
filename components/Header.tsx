@@ -84,11 +84,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenModal }) => {
           {/* CTA Group */}
           <div className="hidden lg:flex items-center gap-4">
             <a 
-              href="tel:+74951234567" 
+              href="tel:+79061231544" 
               className={`flex items-center gap-2 font-semibold ${isScrolled ? 'text-primary' : 'text-white'}`}
             >
               <Phone size={18} className="text-secondary" />
-              <span>+7 (495) 123-45-67</span>
+              <span>+7 (906) 123-15-44</span>
             </a>
             <Button size="sm" variant={isScrolled ? 'primary' : 'secondary'} onClick={onOpenModal}>
               Консультация

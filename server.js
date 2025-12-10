@@ -1,0 +1,119 @@
+/**
+ * Простой сервер для тестирования отправки форм в Telegram и Email
+ * Запуск: node server.js
+ */
+
+import express from 'express';
+import nodemailer from 'nodemailer';
+import axios from 'axios';
+import dotenv from 'dotenv';
+import cors from 'cors';
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.post('/api/submit-form', async (req, res) => {
+  const { name, phone, source, debtAmount } = req.body;
+
+  console.log('📨 Получена новая заявка:', { name, phone, source, debtAmount });
+
+  const errors = [];
+
+  try {
+    // Отправка в Telegram
+    if (process.env.VITE_TELEGRAM_BOT_TOKEN && process.env.VITE_TELEGRAM_CHAT_ID) {
+      try {
+        const message = `🔔 Новая заявка с сайта Правовой Альянс\n\n👤 Имя: ${name}\n📞 Телефон: ${phone}${debtAmount ? `\n💰 Сумма долга: ${debtAmount}` : ''}\n📍 Источник: ${source || 'Не указан'}\n\n⏰ Время: ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}`;
+        
+        const telegramResponse = await axios.post(
+          `https://api.telegram.org/bot${process.env.VITE_TELEGRAM_BOT_TOKEN}/sendMessage`,
+          {
+            chat_id: process.env.VITE_TELEGRAM_CHAT_ID,
+            text: message
+          },
+          { timeout: 10000 }
+        );
+
+        console.log('✅ Сообщение отправлено в Telegram');
+      } catch (telegramError) {
+        console.error('❌ Ошибка отправки в Telegram:', telegramError.message);
+        errors.push('Telegram: ' + telegramError.message);
+      }
+    } else {
+      console.warn('⚠️ Telegram не настроен (отсутствуют токен или chat_id)');
+    }
+
+    // Отправка на Email
+    if (process.env.VITE_SMTP_HOST && process.env.VITE_SMTP_USER && process.env.VITE_SMTP_PASSWORD) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.VITE_SMTP_HOST,
+          port: parseInt(process.env.VITE_SMTP_PORT || '465'),
+          secure: process.env.VITE_SMTP_PORT === '465', // true для 465, false для других портов
+          auth: {
+            user: process.env.VITE_SMTP_USER,
+            pass: process.env.VITE_SMTP_PASSWORD,
+          },
+        });
+
+        await transporter.sendMail({
+          from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+          to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
+          subject: `Новая заявка с сайта: ${name}`,
+          html: `
+            <h2>Новая заявка с сайта Правовой Альянс</h2>
+            <p><strong>Имя:</strong> ${name}</p>
+            <p><strong>Телефон:</strong> ${phone}</p>
+            ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
+            <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
+            <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
+          `,
+        });
+
+        console.log('✅ Письмо отправлено на Email');
+      } catch (emailError) {
+        console.error('❌ Ошибка отправки Email:', emailError.message);
+        errors.push('Email: ' + emailError.message);
+      }
+    } else {
+      console.warn('⚠️ SMTP не настроен (отсутствуют настройки)');
+    }
+
+    if (errors.length > 0) {
+      res.status(207).json({ 
+        success: true, 
+        message: 'Заявка обработана, но были ошибки',
+        errors 
+      });
+    } else {
+      res.json({ success: true, message: 'Заявка успешно отправлена' });
+    }
+  } catch (error) {
+    console.error('❌ Общая ошибка:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Ошибка при отправке заявки',
+      error: error.message 
+    });
+  }
+});
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    telegram: !!(process.env.VITE_TELEGRAM_BOT_TOKEN && process.env.VITE_TELEGRAM_CHAT_ID),
+    smtp: !!(process.env.VITE_SMTP_HOST && process.env.VITE_SMTP_USER)
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
+  console.log(`📧 SMTP: ${process.env.VITE_SMTP_HOST ? '✅ Настроен' : '❌ Не настроен'}`);
+  console.log(`📱 Telegram: ${process.env.VITE_TELEGRAM_BOT_TOKEN ? '✅ Настроен' : '❌ Не настроен'}`);
+});
+

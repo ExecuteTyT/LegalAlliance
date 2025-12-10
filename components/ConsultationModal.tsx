@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
-import { Lock, CheckCircle2 } from 'lucide-react';
+import { Lock, CheckCircle2, Loader2 } from 'lucide-react';
+import { submitForm } from '../utils/formSubmit';
 
 interface ConsultationModalProps {
   isOpen: boolean;
@@ -10,13 +11,33 @@ interface ConsultationModalProps {
 
 export const ConsultationModal: React.FC<ConsultationModalProps> = ({ isOpen, onClose }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ name: '', phone: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitted(true);
-    }, 1000);
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const result = await submitForm({
+        name: formData.name,
+        phone: formData.phone,
+        source: 'Модальное окно консультации'
+      });
+
+      if (result.success) {
+        setIsSubmitted(true);
+        setFormData({ name: '', phone: '' });
+      } else {
+        setError(result.message || 'Произошла ошибка при отправке');
+      }
+    } catch (err) {
+      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,17 +60,38 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({ isOpen, on
             <input 
               type="text" 
               required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Как к вам обращаться?" 
               className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
             />
             <input 
               type="tel" 
               required
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               placeholder="Ваш телефон для связи" 
               className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
             />
-            <Button fullWidth size="lg" className="text-lg py-6 shadow-2xl hover:shadow-3xl">
-              Получить консультацию БЕСПЛАТНО
+            {error && (
+              <div className="bg-error/10 border border-error/20 rounded-xl p-3">
+                <p className="text-sm text-error text-center">{error}</p>
+              </div>
+            )}
+            <Button 
+              fullWidth 
+              size="lg" 
+              className="text-lg py-6 shadow-2xl hover:shadow-3xl"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Отправка...
+                </>
+              ) : (
+                'Получить консультацию БЕСПЛАТНО'
+              )}
             </Button>
           </form>
 

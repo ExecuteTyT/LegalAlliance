@@ -47,7 +47,7 @@ function App() {
 
       {/* Sticky Phone Button Mobile */}
       <a 
-        href="tel:+74951234567"
+        href="tel:+79061231544"
         className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-success text-white rounded-full flex items-center justify-center shadow-2xl z-40 animate-pulse-slow hover:scale-110 transition-transform"
         aria-label="Call us"
       >
