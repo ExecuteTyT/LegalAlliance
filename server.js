@@ -61,132 +61,147 @@ app.post('/api/submit-form', async (req, res) => {
       console.warn('⚠️ Telegram не настроен (отсутствуют токен или chat_id)');
     }
 
-    // Отправка на Email
+    // Отправка на Email (с таймаутом, чтобы не блокировать ответ)
+    let emailPromise = Promise.resolve();
     if (process.env.VITE_SMTP_HOST && process.env.VITE_SMTP_USER && process.env.VITE_SMTP_PASSWORD) {
-      try {
-        const smtpPort = parseInt(process.env.VITE_SMTP_PORT || '465');
-        const isSecure = smtpPort === 465;
-
-        console.log('📧 Настройки SMTP:', {
-          host: process.env.VITE_SMTP_HOST,
-          port: smtpPort,
-          secure: isSecure,
-          user: process.env.VITE_SMTP_USER,
-          from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
-          to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER
-        });
-
-        // Убираем ciphers: 'SSLv3' - это устаревший протокол и может вызывать проблемы
-        const transporter = nodemailer.createTransport({
-          host: process.env.VITE_SMTP_HOST,
-          port: smtpPort,
-          secure: isSecure,
-          auth: {
-            user: process.env.VITE_SMTP_USER,
-            pass: process.env.VITE_SMTP_PASSWORD,
-          },
-          tls: {
-            rejectUnauthorized: false // Для самоподписанных сертификатов
-          },
-          // Дополнительные настройки для надежности
-          connectionTimeout: 30000,
-          greetingTimeout: 30000,
-          socketTimeout: 30000
-        });
-
-        // Пробуем проверить соединение (но не критично, если не получится)
+      emailPromise = (async () => {
         try {
-          await transporter.verify();
-          console.log('✅ SMTP соединение проверено');
-        } catch (verifyError) {
-          console.warn('⚠️ Не удалось проверить SMTP соединение:', verifyError.message);
-          console.warn('Продолжаем отправку без проверки...');
-        }
+          const smtpPort = parseInt(process.env.VITE_SMTP_PORT || '465');
+          const isSecure = smtpPort === 465;
 
-        const mailOptions = {
-          from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
-          to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
-          subject: `Новая заявка с сайта: ${name}`,
-          html: `
-            <h2>Новая заявка с сайта Правовой Альянс</h2>
-            <p><strong>Имя:</strong> ${name}</p>
-            <p><strong>Телефон:</strong> ${phone}</p>
-            ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
-            <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
-            <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
-          `,
-        };
+          console.log('📧 Настройки SMTP:', {
+            host: process.env.VITE_SMTP_HOST,
+            port: smtpPort,
+            secure: isSecure,
+            user: process.env.VITE_SMTP_USER,
+            from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+            to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER
+          });
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Письмо отправлено на Email');
-        console.log('Message ID:', info.messageId);
-        console.log('Response:', info.response);
-      } catch (emailError) {
-        console.error('❌ Ошибка отправки Email:');
-        console.error('Сообщение:', emailError.message);
-        console.error('Код:', emailError.code);
-        
-        // Проверяем, это DNS ошибка или другая
-        const isDnsError = emailError.code === 'EDNS' || emailError.message.includes('getaddrinfo') || emailError.message.includes('EAI_AGAIN');
-        
-        if (isDnsError) {
-          console.warn('⚠️ DNS ошибка - SMTP сервер недоступен с локальной машины');
-          console.warn('💡 Это нормально для локальной разработки. На production (Vercel) Email будет работать.');
-          // Не добавляем в errors, чтобы не блокировать успешный ответ, если Telegram работает
-        } else {
-          // Другие ошибки (авторизация, соединение и т.д.) - пробуем альтернативные порты
-          const alternativePorts = smtpPort === 465 ? [587, 25] : smtpPort === 587 ? [465, 25] : [587, 465];
-          
-          let emailSent = false;
-          for (const altPort of alternativePorts) {
-            console.log(`🔄 Пробуем альтернативный порт ${altPort}...`);
-            try {
-              const altTransporter = nodemailer.createTransport({
-                host: process.env.VITE_SMTP_HOST,
-                port: altPort,
-                secure: altPort === 465,
-                auth: {
-                  user: process.env.VITE_SMTP_USER,
-                  pass: process.env.VITE_SMTP_PASSWORD,
-                },
-                tls: {
-                  rejectUnauthorized: false
-                },
-                connectionTimeout: 30000,
-                greetingTimeout: 30000,
-                socketTimeout: 30000
-              });
+          // Создаем промис с таймаутом для SMTP отправки
+          const sendEmailWithTimeout = () => {
+            return Promise.race([
+              (async () => {
+                const transporter = nodemailer.createTransport({
+                  host: process.env.VITE_SMTP_HOST,
+                  port: smtpPort,
+                  secure: isSecure,
+                  auth: {
+                    user: process.env.VITE_SMTP_USER,
+                    pass: process.env.VITE_SMTP_PASSWORD,
+                  },
+                  tls: {
+                    rejectUnauthorized: false
+                  },
+                  // Уменьшенные таймауты для быстрого ответа
+                  connectionTimeout: 15000,
+                  greetingTimeout: 15000,
+                  socketTimeout: 15000
+                });
 
-              const altMailOptions = {
-                from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
-                to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
-                subject: `Новая заявка с сайта: ${name}`,
-                html: `
-                  <h2>Новая заявка с сайта Правовой Альянс</h2>
-                  <p><strong>Имя:</strong> ${name}</p>
-                  <p><strong>Телефон:</strong> ${phone}</p>
-                  ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
-                  <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
-                  <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
-                `,
-              };
+                const mailOptions = {
+                  from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+                  to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
+                  subject: `Новая заявка с сайта: ${name}`,
+                  html: `
+                    <h2>Новая заявка с сайта Правовой Альянс</h2>
+                    <p><strong>Имя:</strong> ${name}</p>
+                    <p><strong>Телефон:</strong> ${phone}</p>
+                    ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
+                    <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
+                    <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
+                  `,
+                };
 
-              const altInfo = await altTransporter.sendMail(altMailOptions);
-              console.log(`✅ Письмо отправлено на Email через порт ${altPort}!`);
-              console.log('Message ID:', altInfo.messageId);
-              emailSent = true;
-              break; // Успешно отправили, выходим из цикла
-            } catch (altError) {
-              console.error(`❌ Ошибка при попытке через порт ${altPort}:`, altError.message);
+                const info = await transporter.sendMail(mailOptions);
+                console.log('✅ Письмо отправлено на Email');
+                console.log('Message ID:', info.messageId);
+                return true;
+              })(),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('SMTP timeout')), 20000)
+              )
+            ]);
+          };
+
+          // Пробуем основной порт
+          try {
+            await sendEmailWithTimeout();
+          } catch (emailError) {
+            console.error('❌ Ошибка отправки Email:');
+            console.error('Сообщение:', emailError.message);
+            console.error('Код:', emailError.code);
+            
+            // Проверяем, это DNS ошибка, таймаут или другая
+            const isDnsError = emailError.code === 'EDNS' || emailError.message.includes('getaddrinfo') || emailError.message.includes('EAI_AGAIN');
+            const isTimeout = emailError.message.includes('timeout') || emailError.message === 'SMTP timeout';
+            
+            if (isDnsError) {
+              console.warn('⚠️ DNS ошибка - SMTP сервер недоступен');
+            } else if (isTimeout) {
+              console.warn('⚠️ SMTP таймаут - отправка заняла слишком много времени');
+            } else {
+              // Другие ошибки - пробуем альтернативные порты
+              const alternativePorts = smtpPort === 465 ? [587, 25] : smtpPort === 587 ? [465, 25] : [587, 465];
+              
+              let emailSent = false;
+              for (const altPort of alternativePorts) {
+                console.log(`🔄 Пробуем альтернативный порт ${altPort}...`);
+                try {
+                  const altTransporter = nodemailer.createTransport({
+                    host: process.env.VITE_SMTP_HOST,
+                    port: altPort,
+                    secure: altPort === 465,
+                    auth: {
+                      user: process.env.VITE_SMTP_USER,
+                      pass: process.env.VITE_SMTP_PASSWORD,
+                    },
+                    tls: {
+                      rejectUnauthorized: false
+                    },
+                    connectionTimeout: 15000,
+                    greetingTimeout: 15000,
+                    socketTimeout: 15000
+                  });
+
+                  const altMailOptions = {
+                    from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
+                    to: process.env.VITE_SMTP_TO || process.env.VITE_SMTP_USER,
+                    subject: `Новая заявка с сайта: ${name}`,
+                    html: `
+                      <h2>Новая заявка с сайта Правовой Альянс</h2>
+                      <p><strong>Имя:</strong> ${name}</p>
+                      <p><strong>Телефон:</strong> ${phone}</p>
+                      ${debtAmount ? `<p><strong>Сумма долга:</strong> ${debtAmount}</p>` : ''}
+                      <p><strong>Источник:</strong> ${source || 'Не указан'}</p>
+                      <p><strong>Время:</strong> ${new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })}</p>
+                    `,
+                  };
+
+                  await Promise.race([
+                    altTransporter.sendMail(altMailOptions),
+                    new Promise((_, reject) => 
+                      setTimeout(() => reject(new Error('SMTP timeout')), 20000)
+                    )
+                  ]);
+                  
+                  console.log(`✅ Письмо отправлено на Email через порт ${altPort}!`);
+                  emailSent = true;
+                  break;
+                } catch (altError) {
+                  console.error(`❌ Ошибка при попытке через порт ${altPort}:`, altError.message);
+                }
+              }
+              
+              if (!emailSent && !isDnsError && !isTimeout) {
+                errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
+              }
             }
           }
-          
-          if (!emailSent) {
-            // Если все порты не сработали и это не DNS ошибка - добавляем в errors
-            errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
-          }
+        } catch (err) {
+          console.error('❌ Критическая ошибка при отправке Email:', err.message);
         }
-      }
+      })();
     } else {
       console.warn('⚠️ SMTP не настроен (отсутствуют настройки)');
       console.warn('Проверьте переменные:', {
@@ -197,8 +212,13 @@ app.post('/api/submit-form', async (req, res) => {
     }
 
     // Если Telegram работает, считаем заявку успешной, даже если Email не отправился
-    // (Email может не работать локально, но будет работать на production)
+    // Отправляем ответ клиенту сразу, не дожидаясь Email
     const telegramWorked = !errors.some(e => e.startsWith('Telegram:'));
+    
+    // Запускаем Email отправку в фоне (не блокируем ответ)
+    emailPromise.catch(err => {
+      console.error('❌ Email отправка в фоне завершилась с ошибкой:', err.message);
+    });
     
     if (errors.length > 0 && !telegramWorked) {
       // Если и Telegram, и Email не работают - возвращаем ошибку
@@ -207,16 +227,13 @@ app.post('/api/submit-form', async (req, res) => {
         message: 'Не удалось отправить заявку. Пожалуйста, попробуйте позже или позвоните нам.',
         errors 
       });
-    } else if (errors.length > 0 && telegramWorked) {
-      // Telegram работает, Email нет - это нормально для локальной разработки
-      console.log('⚠️ Заявка отправлена в Telegram. Email не отправился (возможно, недоступен локально, но будет работать на production)');
+    } else {
+      // Telegram работает - возвращаем успех сразу
+      // Email отправится в фоне, если получится
       return res.json({ 
         success: true, 
-        message: 'Заявка успешно отправлена',
-        warning: 'Email может быть недоступен локально, но будет работать на production'
+        message: 'Заявка успешно отправлена'
       });
-    } else {
-      return res.json({ success: true, message: 'Заявка успешно отправлена' });
     }
   } catch (error) {
     console.error('❌ Общая ошибка:', error);
