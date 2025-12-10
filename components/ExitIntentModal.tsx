@@ -3,6 +3,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { AlertTriangle, Lock, Loader2, CheckCircle2 } from 'lucide-react';
 import { submitForm } from '../utils/formSubmit';
+import { formatPhone, getPhoneDigits, isValidPhone } from '../utils/phoneMask';
 
 export const ExitIntentModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,10 +25,21 @@ export const ExitIntentModal: React.FC = () => {
     return () => document.removeEventListener('mouseleave', handleMouseLeave);
   }, [hasShown]);
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setFormData({ ...formData, phone: formatted });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.phone) {
       setError('Пожалуйста, заполните все поля');
+      return;
+    }
+
+    // Валидация телефона
+    if (!isValidPhone(formData.phone)) {
+      setError('Пожалуйста, введите корректный номер телефона');
       return;
     }
 
@@ -37,7 +49,7 @@ export const ExitIntentModal: React.FC = () => {
     try {
       const result = await submitForm({
         name: formData.name,
-        phone: formData.phone,
+        phone: getPhoneDigits(formData.phone), // Отправляем только цифры
         source: 'Exit Intent модальное окно'
       });
 
@@ -52,7 +64,7 @@ export const ExitIntentModal: React.FC = () => {
         setError(result.message || 'Произошла ошибка при отправке');
       }
     } catch (err) {
-      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
+      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже или позвоните нам.');
     } finally {
       setIsLoading(false);
     }
@@ -94,8 +106,8 @@ export const ExitIntentModal: React.FC = () => {
               type="tel" 
               required
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="Ваш телефон для связи" 
+              onChange={handlePhoneChange}
+              placeholder="+7 (___) ___-__-__" 
               className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
             />
             {error && (

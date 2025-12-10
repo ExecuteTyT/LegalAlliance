@@ -3,6 +3,7 @@ import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { ShieldCheck, Lock } from 'lucide-react';
 import { DebtCalculator } from '../components/DebtCalculator';
+import { formatPhone, getPhoneDigits, isValidPhone } from '../utils/phoneMask';
 
 interface SolutionProps {
   onOpenModal: () => void;
@@ -15,19 +16,31 @@ export const Solution: React.FC<SolutionProps> = ({ onOpenModal }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormState({ ...formState, [e.target.name]: e.target.value });
+    if (e.target.name === 'phone') {
+      const formatted = formatPhone(e.target.value);
+      setFormState({ ...formState, phone: formatted });
+    } else {
+      setFormState({ ...formState, [e.target.name]: e.target.value });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Валидация телефона
+    if (!isValidPhone(formState.phone)) {
+      setError('Пожалуйста, введите корректный номер телефона');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const { submitForm } = await import('../utils/formSubmit');
       const result = await submitForm({
         name: formState.name,
-        phone: formState.phone,
+        phone: getPhoneDigits(formState.phone), // Отправляем только цифры
         source: 'Форма быстрой проверки (Solution)',
         debtAmount: formState.amount
       });
@@ -42,7 +55,7 @@ export const Solution: React.FC<SolutionProps> = ({ onOpenModal }) => {
         setError(result.message || 'Произошла ошибка при отправке');
       }
     } catch (err) {
-      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
+      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже или позвоните нам.');
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +223,7 @@ export const Solution: React.FC<SolutionProps> = ({ onOpenModal }) => {
                     required
                     value={formState.phone}
                     onChange={handleInputChange}
-                    placeholder="Ваш телефон"
+                    placeholder="+7 (___) ___-__-__"
                     className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary focus:ring-4 focus:ring-secondary/10 outline-none transition-all"
                   />
                 </div>

@@ -3,6 +3,7 @@ import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
 import { Lock, CheckCircle2, Loader2 } from 'lucide-react';
 import { submitForm } from '../utils/formSubmit';
+import { formatPhone, getPhoneDigits, isValidPhone } from '../utils/phoneMask';
 
 interface ConsultationModalProps {
   isOpen: boolean;
@@ -15,15 +16,27 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({ isOpen, on
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ name: '', phone: '' });
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setFormData({ ...formData, phone: formatted });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Валидация телефона
+    if (!isValidPhone(formData.phone)) {
+      setError('Пожалуйста, введите корректный номер телефона');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const result = await submitForm({
         name: formData.name,
-        phone: formData.phone,
+        phone: getPhoneDigits(formData.phone), // Отправляем только цифры
         source: 'Модальное окно консультации'
       });
 
@@ -34,7 +47,7 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({ isOpen, on
         setError(result.message || 'Произошла ошибка при отправке');
       }
     } catch (err) {
-      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже.');
+      setError('Произошла ошибка при отправке. Пожалуйста, попробуйте позже или позвоните нам.');
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +82,8 @@ export const ConsultationModal: React.FC<ConsultationModalProps> = ({ isOpen, on
               type="tel" 
               required
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="Ваш телефон для связи" 
+              onChange={handlePhoneChange}
+              placeholder="+7 (___) ___-__-__" 
               className="w-full h-14 px-4 rounded-xl border-2 border-neutral-200 bg-neutral-50 focus:bg-white focus:border-secondary outline-none transition-all text-base"
             />
             {error && (

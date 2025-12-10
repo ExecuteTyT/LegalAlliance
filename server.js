@@ -16,13 +16,20 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/api/submit-form', async (req, res) => {
-  const { name, phone, source, debtAmount } = req.body;
-
-  console.log('📨 Получена новая заявка:', { name, phone, source, debtAmount });
-
-  const errors = [];
-
   try {
+    const { name, phone, source, debtAmount } = req.body;
+
+    // Валидация данных
+    if (!name || !phone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Имя и телефон обязательны для заполнения' 
+      });
+    }
+
+    console.log('📨 Получена новая заявка:', { name, phone, source, debtAmount });
+
+    const errors = [];
     // Отправка в Telegram
     if (process.env.VITE_TELEGRAM_BOT_TOKEN && process.env.VITE_TELEGRAM_CHAT_ID) {
       try {
@@ -49,15 +56,24 @@ app.post('/api/submit-form', async (req, res) => {
     // Отправка на Email
     if (process.env.VITE_SMTP_HOST && process.env.VITE_SMTP_USER && process.env.VITE_SMTP_PASSWORD) {
       try {
+        const smtpPort = parseInt(process.env.VITE_SMTP_PORT || '465');
+        const isSecure = smtpPort === 465;
+
         const transporter = nodemailer.createTransport({
           host: process.env.VITE_SMTP_HOST,
-          port: parseInt(process.env.VITE_SMTP_PORT || '465'),
-          secure: process.env.VITE_SMTP_PORT === '465', // true для 465, false для других портов
+          port: smtpPort,
+          secure: isSecure,
           auth: {
             user: process.env.VITE_SMTP_USER,
             pass: process.env.VITE_SMTP_PASSWORD,
           },
+          tls: {
+            rejectUnauthorized: false // Для самоподписанных сертификатов
+          }
         });
+
+        // Проверка соединения
+        await transporter.verify();
 
         await transporter.sendMail({
           from: process.env.VITE_SMTP_FROM || process.env.VITE_SMTP_USER,
@@ -76,7 +92,8 @@ app.post('/api/submit-form', async (req, res) => {
         console.log('✅ Письмо отправлено на Email');
       } catch (emailError) {
         console.error('❌ Ошибка отправки Email:', emailError.message);
-        errors.push('Email: ' + emailError.message);
+        console.error('Детали ошибки:', emailError);
+        errors.push('Email: ' + (emailError.message || 'Неизвестная ошибка'));
       }
     } else {
       console.warn('⚠️ SMTP не настроен (отсутствуют настройки)');
@@ -93,10 +110,11 @@ app.post('/api/submit-form', async (req, res) => {
     }
   } catch (error) {
     console.error('❌ Общая ошибка:', error);
+    console.error('Стек ошибки:', error.stack);
     res.status(500).json({ 
       success: false, 
       message: 'Ошибка при отправке заявки',
-      error: error.message 
+      error: error.message || 'Неизвестная ошибка'
     });
   }
 });
