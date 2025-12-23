@@ -17,6 +17,10 @@ const __dirname = dirname(__filename);
 dotenv.config();
 
 const app = express();
+
+// Доверие прокси (для правильной работы X-Forwarded-Proto через Nginx)
+app.set('trust proxy', true);
+
 app.use(cors());
 app.use(express.json());
 
@@ -144,7 +148,9 @@ app.post('/api/submit-form', async (req, res) => {
               console.warn('⚠️ SMTP таймаут - отправка заняла слишком много времени');
             } else {
               // Другие ошибки - пробуем альтернативные порты
-              const alternativePorts = smtpPort === 465 ? [587, 25] : smtpPort === 587 ? [465, 25] : [587, 465];
+              // Используем smtpPort, который определен выше, или значение по умолчанию
+              const currentPort = smtpPort || parseInt(process.env.VITE_SMTP_PORT || '465');
+              const alternativePorts = currentPort === 465 ? [587, 25] : currentPort === 587 ? [465, 25] : [587, 465];
               
               let emailSent = false;
               for (const altPort of alternativePorts) {
@@ -202,6 +208,11 @@ app.post('/api/submit-form', async (req, res) => {
           }
         } catch (err) {
           console.error('❌ Критическая ошибка при отправке Email:', err.message);
+          if (err.stack) {
+            console.error('Стек ошибки:', err.stack);
+          }
+          // Не добавляем ошибку в errors, так как это внутренняя ошибка обработки
+          // Telegram уже должен был отправиться, так что заявка считается успешной
         }
       })();
     } else {
